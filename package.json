@@ -1,0 +1,38 @@
+{
+  "name": "upd8",
+  "version": "0.0.1",
+  "description": "An HTML-friendy javascript mini-framework",
+  "main": "lib/upd8.js",
+  "files": [
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "package-lock.json",
+    "lib/**/*"
+  ],
+  "scripts": {
+    "test": "npx playwright test",
+    "build": "rm -rf lib && tsc -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jesseditson/upd8.git"
+  },
+  "keywords": [
+    "frontend",
+    "framework",
+    "html",
+    "mini"
+  ],
+  "author": "Jesse Ditson <jesse.ditson@gmail.com>",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/jesseditson/upd8/issues"
+  },
+  "homepage": "https://github.com/jesseditson/upd8#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.44.1",
+    "@types/node": "^20.14.2",
+    "typescript": "^5.4.5"
+  }
+}
