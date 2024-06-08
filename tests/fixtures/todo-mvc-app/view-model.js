@@ -43,7 +43,6 @@ export const ViewModel = {
 				break;
 			case "toggleAll":
 				const c = !ViewModel.state.todos.find((t) => t.completed);
-				console.log(c);
 				ViewModel.state.todos = ViewModel.state.todos.map((t) => {
 					t.completed = c;
 					return t;

@@ -103,7 +103,7 @@ export class TODOView extends Upd8View {
 					completedCount++;
 				}
 				todoEl.classList.toggle("completed", todo.completed);
-				this.setAttrs(todoEl, { checked: !!todo.completed }, ".toggle");
+				this.findElement(todoEl, ".toggle").checked = !!todo.completed;
 				todoEl.classList.toggle("editing", this.state.editing === todo.id);
 				this.setContent(todoEl, todo.title, "label");
 				this.setData(todoEl, { id: todo.id });
@@ -117,7 +117,7 @@ export class TODOView extends Upd8View {
 		);
 		this.el("clear-completed").classList.toggle("hidden", completedCount === 0);
 		const todoCount = this.state.todos.length;
-		this.setAttrs("toggle-all", { checked: completedCount === todoCount });
+		this.el("toggle-all").checked = completedCount === todoCount;
 		const n = document.createElement("strong");
 		n.innerText = todoCount;
 		this.setContent("todo-count", [
