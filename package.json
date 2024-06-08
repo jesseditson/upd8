@@ -33,6 +33,9 @@
   "devDependencies": {
     "@playwright/test": "^1.44.1",
     "@types/node": "^20.14.2",
+    "http-server": "^14.1.1",
+    "todomvc-app-css": "^2.4.3",
+    "todomvc-common": "^1.0.5",
     "typescript": "^5.4.5"
   }
 }
