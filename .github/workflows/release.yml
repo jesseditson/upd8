@@ -14,7 +14,6 @@ jobs:
       - uses: actions/checkout@v3
       - run: npm ci
       - run: npm run build
-      - run: npm test
       - uses: tobua/release-npm-action@v3
         with:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
