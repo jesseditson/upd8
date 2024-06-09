@@ -29,6 +29,9 @@
   "bugs": {
     "url": "https://github.com/jesseditson/upd8/issues"
   },
+  "publishConfig": {
+    "provenance": true
+  },
   "homepage": "https://github.com/jesseditson/upd8#readme",
   "devDependencies": {
     "@playwright/test": "^1.44.1",

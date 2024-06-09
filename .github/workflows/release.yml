@@ -1,0 +1,23 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  npm:
+    name: Publish to NPM
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required to mint token for npm package provenance
+      contents: write # Needed to create and write release notes in GitHub release
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - uses: tobua/release-npm-action@v3
+        with:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
