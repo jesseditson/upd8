@@ -29,6 +29,7 @@ const writeState = (state) => {
 	);
 };
 
+let cancelling = null;
 export const ViewModel = {
 	state: readState(),
 	handleEvent: (name, value) => {
@@ -65,6 +66,18 @@ export const ViewModel = {
 				ViewModel.state.editing = value;
 				break;
 			case "save":
+				// A blur event is fired when pressing the escape key, which
+				// will arrive shortly after
+				if (value.id === cancelling) {
+					cancelling = null;
+					return;
+				}
+				cancelling = null;
+				if (!value.title) {
+					ViewModel.state.todos = ViewModel.state.todos.filter(
+						(t) => t.id !== value.id
+					);
+				}
 				for (const todo of ViewModel.state.todos) {
 					if (todo.id === value.id) {
 						todo.title = value.title;
@@ -74,6 +87,7 @@ export const ViewModel = {
 				}
 				break;
 			case "cancelEditing":
+				cancelling = ViewModel.state.editing;
 				ViewModel.state.editing = null;
 				break;
 			case "clearCompleted":

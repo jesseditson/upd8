@@ -60,7 +60,7 @@ export class TODOView extends Upd8View {
 			this.eventListener(
 				"todo-list",
 				["change", "blur"],
-				(_, el) => {
+				(e, el) => {
 					this.dispatchEvent({
 						name: "save",
 						value: {
@@ -79,7 +79,7 @@ export class TODOView extends Upd8View {
 						this.dispatchEvent({ name: "cancelEditing" });
 					}
 				},
-				".edit"
+				{ useCapture: true, selector: ".edit" }
 			),
 			this.eventListener("clear-completed", "click", (e, el) => {
 				this.dispatchEvent({ name: "clearCompleted" });
@@ -97,23 +97,26 @@ export class TODOView extends Upd8View {
 		let completedCount = 0;
 		this.setContent(
 			"todo-list",
-			this.state.todos.map((todo) => {
-				const todoEl = this.template("todo");
-				if (todo.completed) {
-					completedCount++;
-				}
-				todoEl.classList.toggle("completed", todo.completed);
-				this.findElement(todoEl, ".toggle").checked = !!todo.completed;
-				todoEl.classList.toggle("editing", this.state.editing === todo.id);
-				this.setContent(todoEl, todo.title, "label");
-				this.setData(todoEl, { id: todo.id });
-				this.findElement(todoEl, ".edit").value = todo.title;
+			this.state.todos.reduce((list, todo) => {
 				const hidden =
 					(this.state.filter === "active" && todo.completed) ||
 					(this.state.filter === "completed" && !todo.completed);
-				todoEl.classList.toggle("hidden", hidden);
-				return todoEl;
-			})
+				if (!hidden) {
+					const todoEl = this.template("todo");
+					if (todo.completed) {
+						completedCount++;
+					}
+					todoEl.classList.toggle("completed", todo.completed);
+					this.findElement(todoEl, ".toggle").checked = !!todo.completed;
+					todoEl.classList.toggle("editing", this.state.editing === todo.id);
+					this.setContent(todoEl, todo.title, "label");
+					this.setData(todoEl, { id: todo.id });
+					const editField = this.findElement(todoEl, ".edit");
+					editField.value = todo.title;
+					list.push(todoEl);
+				}
+				return list;
+			}, [])
 		);
 		this.el("clear-completed").classList.toggle("hidden", completedCount === 0);
 		const todoCount = this.state.todos.length;

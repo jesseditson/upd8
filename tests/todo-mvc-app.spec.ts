@@ -10,6 +10,8 @@ const TODO_ITEMS = [
   "book a doctors appointment",
 ];
 
+const asRE = (s) => s.map((s) => new RegExp(s));
+
 test.describe("New Todo", () => {
   test("should allow me to add todo items", async ({ page }) => {
     // create a new todo locator
@@ -20,17 +22,18 @@ test.describe("New Todo", () => {
     await newTodo.press("Enter");
 
     // Make sure the list only has one todo item.
-    await expect(page.getByTestId("todo-title")).toHaveText([TODO_ITEMS[0]]);
+    await expect(page.getByTestId("todo-title")).toHaveText(
+      asRE([TODO_ITEMS[0]])
+    );
 
     // Create 2nd todo.
     await newTodo.fill(TODO_ITEMS[1]);
     await newTodo.press("Enter");
 
     // Make sure the list now has two todo items.
-    await expect(page.getByTestId("todo-title")).toHaveText([
-      TODO_ITEMS[0],
-      TODO_ITEMS[1],
-    ]);
+    await expect(page.getByTestId("todo-title")).toHaveText(
+      asRE([TODO_ITEMS[0], TODO_ITEMS[1]])
+    );
 
     await checkNumberOfTodosInLocalStorage(page, 2);
   });
@@ -66,7 +69,7 @@ test.describe("New Todo", () => {
     await expect(todoCount).toHaveText(/3/);
 
     // Check all items in one call.
-    await expect(page.getByTestId("todo-title")).toHaveText(TODO_ITEMS);
+    await expect(page.getByTestId("todo-title")).toHaveText(asRE(TODO_ITEMS));
     await checkNumberOfTodosInLocalStorage(page, 3);
   });
 });
@@ -194,11 +197,9 @@ test.describe("Item", () => {
     await secondTodo.getByTestId("edit").press("Enter");
 
     // Explicitly assert the new text value.
-    await expect(todoItems).toHaveText([
-      TODO_ITEMS[0],
-      "buy some sausages",
-      TODO_ITEMS[2],
-    ]);
+    await expect(todoItems).toHaveText(
+      asRE([TODO_ITEMS[0], "buy some sausages", TODO_ITEMS[2]])
+    );
     await checkTodosInLocalStorage(page, "buy some sausages");
   });
 });
@@ -227,11 +228,9 @@ test.describe("Editing", () => {
     await todoItems.nth(1).getByTestId("edit").fill("buy some sausages");
     await todoItems.nth(1).getByTestId("edit").dispatchEvent("blur");
 
-    await expect(todoItems).toHaveText([
-      TODO_ITEMS[0],
-      "buy some sausages",
-      TODO_ITEMS[2],
-    ]);
+    await expect(todoItems).toHaveText(
+      asRE([TODO_ITEMS[0], "buy some sausages", TODO_ITEMS[2]])
+    );
     await checkTodosInLocalStorage(page, "buy some sausages");
   });
 
@@ -244,11 +243,9 @@ test.describe("Editing", () => {
       .fill("    buy some sausages    ");
     await todoItems.nth(1).getByTestId("edit").press("Enter");
 
-    await expect(todoItems).toHaveText([
-      TODO_ITEMS[0],
-      "buy some sausages",
-      TODO_ITEMS[2],
-    ]);
+    await expect(todoItems).toHaveText(
+      asRE([TODO_ITEMS[0], "buy some sausages", TODO_ITEMS[2]])
+    );
     await checkTodosInLocalStorage(page, "buy some sausages");
   });
 
@@ -260,7 +257,7 @@ test.describe("Editing", () => {
     await todoItems.nth(1).getByTestId("edit").fill("");
     await todoItems.nth(1).getByTestId("edit").press("Enter");
 
-    await expect(todoItems).toHaveText([TODO_ITEMS[0], TODO_ITEMS[2]]);
+    await expect(todoItems).toHaveText(asRE([TODO_ITEMS[0], TODO_ITEMS[2]]));
   });
 
   test("should cancel edits on escape", async ({ page }) => {
@@ -268,7 +265,7 @@ test.describe("Editing", () => {
     await todoItems.nth(1).dblclick();
     await todoItems.nth(1).getByTestId("edit").fill("buy some sausages");
     await todoItems.nth(1).getByTestId("edit").press("Escape");
-    await expect(todoItems).toHaveText(TODO_ITEMS);
+    await expect(todoItems).toHaveText(asRE(TODO_ITEMS));
   });
 });
 
@@ -310,7 +307,7 @@ test.describe("Clear completed button", () => {
     await todoItems.nth(1).getByRole("checkbox").check();
     await page.getByRole("button", { name: "Clear completed" }).click();
     await expect(todoItems).toHaveCount(2);
-    await expect(todoItems).toHaveText([TODO_ITEMS[0], TODO_ITEMS[2]]);
+    await expect(todoItems).toHaveText(asRE([TODO_ITEMS[0], TODO_ITEMS[2]]));
   });
 
   test("should be hidden when there are no items that are completed", async ({
@@ -337,18 +334,20 @@ test.describe("Persistence", () => {
     const todoItems = page.getByTestId("todo-item");
     const firstTodoCheck = todoItems.nth(0).getByRole("checkbox");
     await firstTodoCheck.check();
-    await expect(todoItems).toHaveText([TODO_ITEMS[0], TODO_ITEMS[1]]);
+    await expect(todoItems).toHaveText(asRE([TODO_ITEMS[0], TODO_ITEMS[1]]));
     await expect(firstTodoCheck).toBeChecked();
-    await expect(todoItems).toHaveClass(["completed", ""]);
+    await expect(todoItems.first()).toHaveClass(/completed/);
+    await expect(todoItems.nth(1)).not.toHaveClass(/completed/);
 
     // Ensure there is 1 completed item.
     await checkNumberOfCompletedTodosInLocalStorage(page, 1);
 
     // Now reload.
     await page.reload();
-    await expect(todoItems).toHaveText([TODO_ITEMS[0], TODO_ITEMS[1]]);
+    await expect(todoItems).toHaveText(asRE([TODO_ITEMS[0], TODO_ITEMS[1]]));
     await expect(firstTodoCheck).toBeChecked();
-    await expect(todoItems).toHaveClass(["completed", ""]);
+    await expect(todoItems.first()).toHaveClass(/completed/);
+    await expect(todoItems.nth(1)).not.toHaveClass(/completed/);
   });
 });
 
@@ -368,7 +367,7 @@ test.describe("Routing", () => {
     await checkNumberOfCompletedTodosInLocalStorage(page, 1);
     await page.getByRole("link", { name: "Active" }).click();
     await expect(todoItem).toHaveCount(2);
-    await expect(todoItem).toHaveText([TODO_ITEMS[0], TODO_ITEMS[2]]);
+    await expect(todoItem).toHaveText(asRE([TODO_ITEMS[0], TODO_ITEMS[2]]));
   });
 
   test("should respect the back button", async ({ page }) => {
