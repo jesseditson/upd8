@@ -1,4 +1,4 @@
-export function makeid(length) {
+export const makeid = (length) => {
 	let result = "";
 	const characters =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -9,4 +9,17 @@ export function makeid(length) {
 		counter += 1;
 	}
 	return result;
-}
+};
+
+export const debounce = (fn, timeout = 0) => {
+	let pt = null;
+	return (...args) => {
+		if (pt) {
+			clearTimeout(pt);
+		}
+		pt = setTimeout(() => {
+			pt = null;
+			fn(...args);
+		}, timeout);
+	};
+};

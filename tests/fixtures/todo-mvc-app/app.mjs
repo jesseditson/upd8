@@ -1,4 +1,5 @@
 import { cre8 } from "./lib/upd8.js";
+import { debounce } from "./util.mjs";
 import { ViewModel } from "./view-model.js";
 import { TODOView } from "./view.mjs";
 
@@ -7,10 +8,12 @@ import { TODOView } from "./view.mjs";
 const initUI = cre8([TODOView], {});
 
 window.addEventListener("load", () => {
-	const upd8 = initUI(ViewModel.state, (event) => {
-		ViewModel.handleEvent(event.name, event.value);
-		upd8(ViewModel.state);
-	});
+	const upd8 = debounce(
+		initUI(ViewModel.state, (event) => {
+			ViewModel.handleEvent(event.name, event.value);
+			upd8(ViewModel.state);
+		})
+	);
 	window.addEventListener("hashchange", () => {
 		ViewModel.handleEvent("hashchange", window.location.hash);
 		upd8(ViewModel.state);
