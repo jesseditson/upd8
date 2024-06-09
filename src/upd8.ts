@@ -87,6 +87,11 @@ export const errored = (error: string) => {
   }
 };
 
+export type EventListenerOptions = {
+  useCapture?: boolean;
+  selector?: string;
+};
+
 export class Upd8View<State, Event> {
   get id(): string {
     throw new Error("Upd8View subclasses must define id");
@@ -169,13 +174,21 @@ export class Upd8View<State, Event> {
     el: string | T,
     event: K | K[],
     handler: (this: T, ev: HTMLElementEventMap[K], element: T) => any,
-    targetSelector?: string
+    selectorOrOptions?: string | EventListenerOptions
   ): Function {
     let htmlEl: T;
     if (typeof el === "string") {
       htmlEl = this.els.get(el) as T;
     } else {
       htmlEl = el as T;
+    }
+    let targetSelector = null;
+    let useCapture = false;
+    if (typeof selectorOrOptions === "string") {
+      targetSelector = selectorOrOptions;
+    } else if (selectorOrOptions) {
+      targetSelector = selectorOrOptions.selector;
+      useCapture = !!selectorOrOptions.useCapture;
     }
     const listenedHandler = targetSelector
       ? (e: HTMLElementEventMap[K]) => {
@@ -192,11 +205,11 @@ export class Upd8View<State, Event> {
         };
     const events = typeof event === "string" ? [event] : event;
     events.forEach((event) => {
-      htmlEl.addEventListener(event, listenedHandler);
+      htmlEl.addEventListener(event, listenedHandler, useCapture);
     });
     return () => {
       events.forEach((event) => {
-        htmlEl.removeEventListener(event, listenedHandler);
+        htmlEl.removeEventListener(event, listenedHandler, useCapture);
       });
     };
   }
