@@ -123,7 +123,6 @@ export class Upd8View<State, Event> {
   }
 
   hide() {
-    this._upd8_lazyInit();
     this.rootElement.classList.add("hidden");
   }
 
