@@ -98,48 +98,48 @@ export class Upd8View<State, Event> {
   get id(): string {
     throw new Error("Upd8View subclasses must define id");
   }
-  private initialized = false;
+  private _upd8_initialized = false;
   protected rootElement!: HTMLElement;
   protected state!: State;
-  private els: Map<string, HTMLElement> = new Map();
-  private templates: Map<string, HTMLElement> = new Map();
-  private eventListeners: Set<(evt: Event) => void> = new Set();
+  private _upd8_els: Map<string, HTMLElement> = new Map();
+  private _upd8_templates: Map<string, HTMLElement> = new Map();
+  private _upd8_eventListeners: Set<(evt: Event) => void> = new Set();
   protected didUpdate(_view: this) {}
   constructor(state: State, updated: (view: Upd8View<State, Event>) => void) {
     this.state = state;
     this.didUpdate = updated;
   }
 
-  private lazyInit() {
-    if (!this.initialized) {
+  private _upd8_lazyInit() {
+    if (!this._upd8_initialized) {
       this.rootElement = document.getElementById(this.id) as HTMLElement;
       if (!this.rootElement) {
         throw new Error(`Upd8View element not found: ${this.id}`);
       }
-      this.initElements();
+      this._upd8_initElements();
       this.mount();
-      this.initialized = true;
+      this._upd8_initialized = true;
     }
   }
 
   hide() {
-    this.lazyInit();
+    this._upd8_lazyInit();
     this.rootElement.classList.add("hidden");
   }
 
   show() {
-    this.lazyInit();
+    this._upd8_lazyInit();
     this.rootElement.classList.remove("hidden");
   }
 
   errored(message: string) {}
 
   showing(state: State): boolean {
-    return this.els.has(this.id);
+    return this._upd8_els.has(this.id);
   }
 
   update(state: State) {
-    this.lazyInit();
+    this._upd8_lazyInit();
     this.state = state;
     this.updated();
   }
@@ -149,12 +149,12 @@ export class Upd8View<State, Event> {
   }
 
   dispatchEvent(event: Event) {
-    this.eventListeners.forEach((listener) => listener(event));
+    this._upd8_eventListeners.forEach((listener) => listener(event));
   }
 
   listen(handler: (event: Event) => void) {
-    this.eventListeners.add(handler);
-    return () => this.eventListeners.delete(handler);
+    this._upd8_eventListeners.add(handler);
+    return () => this._upd8_eventListeners.delete(handler);
   }
 
   updated() {}
@@ -166,7 +166,7 @@ export class Upd8View<State, Event> {
   becameVisible() {}
 
   template<T extends HTMLElement = HTMLElement>(name: string): T {
-    const t = this.templates.get(name)?.cloneNode(true);
+    const t = this._upd8_templates.get(name)?.cloneNode(true);
     if (!t) {
       throw new Error(`upd8 template ${name} does not exist.`);
     }
@@ -174,7 +174,7 @@ export class Upd8View<State, Event> {
   }
 
   el<T extends HTMLElement = HTMLElement>(id: string): T {
-    let el = this.els.get(id);
+    let el = this._upd8_els.get(id);
     if (!el) {
       throw new Error(`ID ${id} does not exist.`);
     }
@@ -189,7 +189,7 @@ export class Upd8View<State, Event> {
   ): Function {
     let htmlEl: T;
     if (typeof el === "string") {
-      htmlEl = this.els.get(el) as T;
+      htmlEl = this._upd8_els.get(el) as T;
     } else {
       htmlEl = el as T;
     }
@@ -225,14 +225,14 @@ export class Upd8View<State, Event> {
     };
   }
 
-  private findElement(
+  private _upd8_findElement(
     el: string | HTMLElement,
     selector?: string
   ): HTMLElement {
     let htmlEl;
     const isSel = typeof el === "string";
     if (isSel) {
-      htmlEl = this.els.get(el);
+      htmlEl = this._upd8_els.get(el);
     } else {
       htmlEl = el;
     }
@@ -249,13 +249,13 @@ export class Upd8View<State, Event> {
     }
     return htmlEl as HTMLElement;
   }
-  private findElements(
+  private _upd8_findElements(
     el: string | HTMLElement,
     selector: string
   ): HTMLElement[] {
     let rootEl;
     if (typeof el === "string") {
-      rootEl = this.els.get(el);
+      rootEl = this._upd8_els.get(el);
     } else {
       rootEl = el;
     }
@@ -276,12 +276,12 @@ export class Upd8View<State, Event> {
     selector?: string
   ) {
     if (selector) {
-      const els = this.findElements(el, selector);
+      const els = this._upd8_findElements(el, selector);
       for (const el of els) {
         this.setContent(el, value);
       }
     } else {
-      const htmlEl = this.findElement(el);
+      const htmlEl = this._upd8_findElement(el);
       if (Array.isArray(value)) {
         htmlEl?.replaceChildren(...value);
       } else {
@@ -294,7 +294,7 @@ export class Upd8View<State, Event> {
     data: Record<string, string>,
     selector?: string
   ) {
-    const htmlEl = this.findElement(el, selector);
+    const htmlEl = this._upd8_findElement(el, selector);
     Object.entries(data).forEach((d) => {
       const [k, v] = d;
       htmlEl.dataset[k] = v;
@@ -305,7 +305,7 @@ export class Upd8View<State, Event> {
     data: Record<string, string>,
     selector?: string
   ) {
-    const htmlEl = this.findElement(el, selector);
+    const htmlEl = this._upd8_findElement(el, selector);
     Object.entries(data).forEach((d) => {
       const [k, v] = d;
       if (typeof v === "boolean") {
@@ -320,13 +320,13 @@ export class Upd8View<State, Event> {
     });
   }
 
-  private initElements() {
+  private _upd8_initElements() {
     this.rootElement.querySelectorAll("[id]").forEach((el) => {
-      this.els.set(el.id, el as HTMLElement);
+      this._upd8_els.set(el.id, el as HTMLElement);
     });
     this.rootElement.querySelectorAll("[data-template]").forEach((el) => {
       const e = el as HTMLElement;
-      this.templates.set(e.dataset["template"]!, e);
+      this._upd8_templates.set(e.dataset["template"]!, e);
       delete e.dataset["template"];
       e.parentNode?.removeChild(e);
     });
