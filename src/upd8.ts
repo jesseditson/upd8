@@ -123,7 +123,7 @@ export class Upd8View<State, Event> {
   }
 
   hide() {
-    this.rootElement.classList.add("hidden");
+    this.rootElement?.classList.add("hidden");
   }
 
   show() {
