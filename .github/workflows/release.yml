@@ -15,9 +15,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: |
-          echo "//registry.npmjs.org/:_auth = $NPM_AUTH_TOKEN" > ~/.npmrc \
-          echo "email = $NPM_EMAIL" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > ~/.npmrc
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_EMAIL: "jesseditson"
       - run: npm publish
