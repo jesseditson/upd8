@@ -7,6 +7,8 @@ import { TODOView } from "./view.mjs";
 
 const initUI = cre8([TODOView], {});
 
+ViewModel.init();
+
 window.addEventListener("load", () => {
 	const upd8 = debounce(
 		initUI(ViewModel.state, (event) => {

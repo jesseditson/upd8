@@ -71,10 +71,6 @@ export class TODOView extends Upd8View {
     ];
   }
 
-  showing() {
-    return true;
-  }
-
   updated() {
     let completedCount = 0;
     this.setContent(

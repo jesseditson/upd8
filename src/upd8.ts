@@ -98,39 +98,48 @@ export class Upd8View<State, Event> {
   get id(): string {
     throw new Error("Upd8View subclasses must define id");
   }
-  protected element!: HTMLElement;
+  private initialized = false;
+  protected rootElement!: HTMLElement;
   protected state!: State;
   private els: Map<string, HTMLElement> = new Map();
   private templates: Map<string, HTMLElement> = new Map();
   private eventListeners: Set<(evt: Event) => void> = new Set();
   protected didUpdate(_view: this) {}
   constructor(state: State, updated: (view: Upd8View<State, Event>) => void) {
-    const id = this.id;
-    this.element = document.getElementById(id) as HTMLElement;
-    if (!this.element) {
-      throw new Error(`Upd8View element not found: ${id}`);
-    }
     this.state = state;
-    this.initElements();
-    this.mount();
     this.didUpdate = updated;
   }
 
+  private lazyInit() {
+    if (!this.initialized) {
+      this.rootElement = document.getElementById(this.id) as HTMLElement;
+      if (!this.rootElement) {
+        throw new Error(`Upd8View element not found: ${this.id}`);
+      }
+      this.initElements();
+      this.mount();
+      this.initialized = true;
+    }
+  }
+
   hide() {
-    this.element.classList.add("hidden");
+    this.lazyInit();
+    this.rootElement.classList.add("hidden");
   }
 
   show() {
-    this.element.classList.remove("hidden");
+    this.lazyInit();
+    this.rootElement.classList.remove("hidden");
   }
 
-  errored(_message: string) {}
+  errored(message: string) {}
 
-  showing(_state: State): boolean {
-    return false;
+  showing(state: State): boolean {
+    return this.els.has(this.id);
   }
 
   update(state: State) {
+    this.lazyInit();
     this.state = state;
     this.updated();
   }
@@ -312,10 +321,10 @@ export class Upd8View<State, Event> {
   }
 
   private initElements() {
-    this.element.querySelectorAll("[id]").forEach((el) => {
+    this.rootElement.querySelectorAll("[id]").forEach((el) => {
       this.els.set(el.id, el as HTMLElement);
     });
-    this.element.querySelectorAll("[data-template]").forEach((el) => {
+    this.rootElement.querySelectorAll("[data-template]").forEach((el) => {
       const e = el as HTMLElement;
       this.templates.set(e.dataset["template"]!, e);
       delete e.dataset["template"];

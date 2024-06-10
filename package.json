@@ -10,6 +10,7 @@
     "package-lock.json",
     "lib/**/*"
   ],
+  "types": "lib/upd8.d.ts",
   "scripts": {
     "test": "npx playwright test",
     "build": "rm -rf lib && tsc -p tsconfig.json"

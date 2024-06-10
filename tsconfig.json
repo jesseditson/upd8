@@ -7,7 +7,6 @@
     "isolatedModules": true,
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
     /* Module Resolution Options */
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -16,7 +15,9 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "outDir": "lib",
-    "declaration": true
+    "declaration": true,
+    "composite": true,
+    "declarationMap": true
   },
   "include": ["./src/**/*"]
 }

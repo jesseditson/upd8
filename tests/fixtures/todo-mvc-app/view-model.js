@@ -31,6 +31,7 @@ const writeState = (state) => {
 
 let cancelling = null;
 export const ViewModel = {
+	init: () => writeState(readState()),
 	state: readState(),
 	handleEvent: (name, value) => {
 		console.log("EVENT:", name, value);
