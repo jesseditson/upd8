@@ -13,7 +13,9 @@ export type ImperativeUpd8Fn<State, Event> = (
   upd8: (view: Upd8View<State, Event>) => void
 ) => void;
 export type Upd8<State, Event> = {
-  (state: State, eventHandler: (evt: Event) => void): void;
+  (state: State, eventHandler: (evt: Event) => void): (
+    state: State
+  ) => Promise<void>;
   imperative: ImperativeUpd8Fn<State, Event>;
 };
 
