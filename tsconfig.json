@@ -15,9 +15,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "outDir": "lib",
-    "declaration": true,
-    "composite": true,
-    "declarationMap": true
+    "declaration": true
   },
   "include": ["./src/**/*"]
 }
