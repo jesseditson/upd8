@@ -66,7 +66,7 @@ export const cre8 = <State, Event>(
       }
       config.didUpdate();
     };
-    upd8(state);
+    setTimeout(() => upd8(state), 0);
     return upd8;
   };
   initUpd8.imperative = (
@@ -99,7 +99,9 @@ export class Upd8View<State, Event> {
     throw new Error("Upd8View subclasses must define id");
   }
   private _upd8_initialized = false;
-  protected rootElement!: HTMLElement;
+  protected get rootElement(): HTMLElement | undefined {
+    return document.getElementById(this.id) as HTMLElement | undefined;
+  }
   protected state!: State;
   private _upd8_els: Map<string, HTMLElement> = new Map();
   private _upd8_templates: Map<string, HTMLElement> = new Map();
@@ -112,7 +114,6 @@ export class Upd8View<State, Event> {
 
   private _upd8_lazyInit() {
     if (!this._upd8_initialized) {
-      this.rootElement = document.getElementById(this.id) as HTMLElement;
       if (!this.rootElement) {
         throw new Error(`Upd8View element not found: ${this.id}`);
       }
@@ -128,13 +129,13 @@ export class Upd8View<State, Event> {
 
   show() {
     this._upd8_lazyInit();
-    this.rootElement.classList.remove("hidden");
+    this.rootElement?.classList.remove("hidden");
   }
 
   errored(message: string) {}
 
   showing(state: State): boolean {
-    return this._upd8_els.has(this.id);
+    return !!this.rootElement;
   }
 
   update(state: State) {
@@ -320,10 +321,10 @@ export class Upd8View<State, Event> {
   }
 
   private _upd8_initElements() {
-    this.rootElement.querySelectorAll("[id]").forEach((el) => {
+    this.rootElement?.querySelectorAll("[id]").forEach((el) => {
       this._upd8_els.set(el.id, el as HTMLElement);
     });
-    this.rootElement.querySelectorAll("[data-template]").forEach((el) => {
+    this.rootElement?.querySelectorAll("[data-template]").forEach((el) => {
       const e = el as HTMLElement;
       this._upd8_templates.set(e.dataset["template"]!, e);
       delete e.dataset["template"];
