@@ -5,7 +5,7 @@ const visibleViews = new Set();
 export type Config<State, Event> = {
   setHidden?: (el: HTMLElement, hidden: boolean) => void;
   viewUpdated?: (screen: Upd8View<State, Event>) => void;
-  didUpdate?: () => void;
+  didUpdate?: (state: State) => void;
 };
 
 export type ImperativeUpd8Fn<State, Event> = (
@@ -40,7 +40,7 @@ export const cre8 = <State, Event>(
       throw new Error("upd8 may only be initialized once.");
     }
     for (const ViewK of allViews) {
-      const view = new ViewK(state, config.didUpdate);
+      const view = new ViewK(state, config.viewUpdated);
       if (views.has(view.id)) {
         throw new Error(`View ${view.id} already exists.`);
       }
@@ -64,7 +64,7 @@ export const cre8 = <State, Event>(
           visibleViews.delete(view.id);
         }
       }
-      config.didUpdate();
+      config.didUpdate(state);
     };
     setTimeout(() => upd8(state), 0);
     return upd8;
