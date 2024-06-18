@@ -11,7 +11,7 @@ jobs:
   test:
     strategy:
       matrix:
-        browser: [firefox, safari, chromium]
+        browser: [firefox, webkit, chromium]
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
