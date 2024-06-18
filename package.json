@@ -1,6 +1,6 @@
 {
   "name": "upd8",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "An HTML-friendy javascript mini-framework",
   "main": "lib/upd8.js",
   "files": [
