@@ -225,10 +225,7 @@ export class Upd8View<State, Event> {
     };
   }
 
-  private _upd8_findElement(
-    el: string | HTMLElement,
-    selector?: string
-  ): HTMLElement {
+  public findElement(el: string | HTMLElement, selector?: string): HTMLElement {
     let htmlEl;
     const isSel = typeof el === "string";
     if (isSel) {
@@ -281,7 +278,7 @@ export class Upd8View<State, Event> {
         this.setContent(el, value);
       }
     } else {
-      const htmlEl = this._upd8_findElement(el);
+      const htmlEl = this.findElement(el);
       if (Array.isArray(value)) {
         htmlEl?.replaceChildren(...value);
       } else {
@@ -294,7 +291,7 @@ export class Upd8View<State, Event> {
     data: Record<string, string>,
     selector?: string
   ) {
-    const htmlEl = this._upd8_findElement(el, selector);
+    const htmlEl = this.findElement(el, selector);
     Object.entries(data).forEach((d) => {
       const [k, v] = d;
       htmlEl.dataset[k] = v;
@@ -305,7 +302,7 @@ export class Upd8View<State, Event> {
     data: Record<string, string>,
     selector?: string
   ) {
-    const htmlEl = this._upd8_findElement(el, selector);
+    const htmlEl = this.findElement(el, selector);
     Object.entries(data).forEach((d) => {
       const [k, v] = d;
       if (typeof v === "boolean") {
