@@ -441,9 +441,18 @@ async function createDefaultTodos(page: Page) {
   }
 }
 
+const getTODOsFromLocalStorage = () => {
+  try {
+    return JSON.parse(localStorage.getItem("todos-upd8")!);
+  } catch (e) {
+    console.error(`FAILED QUERYING LOCALSTORAGE: ${e}`);
+    return { todos: [] };
+  }
+};
+
 async function checkNumberOfTodosInLocalStorage(page: Page, expected: number) {
   return await page.waitForFunction(async (e) => {
-    return JSON.parse(localStorage["todos-upd8"]).length === e;
+    return getTODOsFromLocalStorage().length === e;
   }, expected);
 }
 
@@ -453,16 +462,15 @@ async function checkNumberOfCompletedTodosInLocalStorage(
 ) {
   return await page.waitForFunction(async (e) => {
     return (
-      JSON.parse(localStorage["todos-upd8"]).todos.filter(
-        (todo: any) => todo.completed
-      ).length === e
+      getTODOsFromLocalStorage().todos.filter((todo: any) => todo.completed)
+        .length === e
     );
   }, expected);
 }
 
 async function checkTodosInLocalStorage(page: Page, title: string) {
   return await page.waitForFunction(async (t) => {
-    return JSON.parse(localStorage["todos-upd8"])
+    return getTODOsFromLocalStorage()
       .todos.map((todo: any) => todo.title)
       .includes(t);
   }, title);
