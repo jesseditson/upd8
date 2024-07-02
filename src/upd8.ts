@@ -85,7 +85,7 @@ export const cre8 = <State, Event>(
 
 export const errored = (error: string) => {
   for (const view of views.values()) {
-    view.errored(error);
+    view.internalError(error);
   }
 };
 
@@ -130,6 +130,11 @@ export class Upd8View<State, Event> {
   show() {
     this._upd8_lazyInit();
     this.rootElement?.classList.remove("hidden");
+  }
+
+  internalError(message: string) {
+    this._upd8_lazyInit();
+    this.errored(message);
   }
 
   errored(message: string) {}
