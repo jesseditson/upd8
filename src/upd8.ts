@@ -4,7 +4,7 @@ const visibleViews = new Set();
 
 export type Config<State, Event> = {
   setHidden?: (el: HTMLElement, hidden: boolean) => void;
-  viewUpdated?: (screen: Upd8View<State, Event>) => void;
+  viewUpdated?: (view: Upd8View<State, Event>) => void;
   didUpdate?: (state: State) => void;
 };
 
@@ -21,7 +21,7 @@ export type Upd8<State, Event> = {
 
 export type Upd8ViewConstructor<State, Event> = (new (
   state: State,
-  didUpdate: (view: Upd8View<State, Event>) => void
+  viewUpdated: (view: Upd8View<State, Event>, state: State) => void
 ) => Upd8View<State, Event>) & { get id(): string };
 
 export const cre8 = <State, Event>(
@@ -32,7 +32,7 @@ export const cre8 = <State, Event>(
     _config.viewUpdated = (_view) => {};
   }
   if (!_config.didUpdate) {
-    _config.didUpdate = () => {};
+    _config.didUpdate = (_state) => {};
   }
   const config = _config as Required<Config<State, Event>>;
   const initUpd8 = (state: State, eventHandler: (evt: Event) => void) => {
@@ -40,7 +40,10 @@ export const cre8 = <State, Event>(
       throw new Error("upd8 may only be initialized once.");
     }
     for (const ViewK of allViews) {
-      const view = new ViewK(state, config.viewUpdated);
+      const view = new ViewK(state, (view, state) => {
+        config.viewUpdated(view);
+        config.didUpdate(state);
+      });
       if (views.has(view.id)) {
         throw new Error(`View ${view.id} already exists.`);
       }
@@ -106,8 +109,11 @@ export class Upd8View<State, Event> {
   private _upd8_els: Map<string, HTMLElement> = new Map();
   private _upd8_templates: Map<string, HTMLElement> = new Map();
   private _upd8_eventListeners: Set<(evt: Event) => void> = new Set();
-  protected didUpdate(_view: this) {}
-  constructor(state: State, updated: (view: Upd8View<State, Event>) => void) {
+  protected didUpdate(_view: this, _state: State) {}
+  constructor(
+    state: State,
+    updated: (view: Upd8View<State, Event>, state: State) => void
+  ) {
     this.state = state;
     this.didUpdate = updated;
   }
@@ -150,7 +156,7 @@ export class Upd8View<State, Event> {
   }
   internalUpdate() {
     this.updated();
-    this.didUpdate(this);
+    this.didUpdate(this, this.state);
   }
 
   dispatchEvent(event: Event) {
