@@ -8,9 +8,11 @@ export type Config<State, Event> = {
   didUpdate?: (state: State) => void;
 };
 
-export type ImperativeUpd8Fn<State, Event> = (
+export type ImperativeUpd8Fn<State, Event> = <
+  ViewType extends Upd8View<State, Event> = Upd8View<State, Event>
+>(
   id: string,
-  upd8: (view: Upd8View<State, Event>) => void
+  upd8: (view: ViewType) => void
 ) => void;
 export type Upd8<State, Event> = {
   (state: State, eventHandler: (evt: Event) => void): (
@@ -72,13 +74,15 @@ export const cre8 = <State, Event>(
     setTimeout(() => upd8(state), 0);
     return upd8;
   };
-  initUpd8.imperative = (
+  initUpd8.imperative = <
+    ViewType extends Upd8View<State, Event> = Upd8View<State, Event>
+  >(
     id: string,
-    upd8: (view: Upd8View<State, Event>) => void
+    upd8: (view: ViewType) => void
   ) => {
     for (const view of views.values()) {
       if (view.id === id) {
-        upd8(view);
+        upd8(view as ViewType);
         break;
       }
     }
