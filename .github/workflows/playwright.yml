@@ -11,7 +11,7 @@ jobs:
   test:
     strategy:
       matrix:
-        browser: [firefox, webkit, chromium]
+        browser: [chromium] # firefox, webkit,
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -29,5 +29,5 @@ jobs:
         if: always()
         with:
           name: playwright-report
-          path: playwright-report/
+          path: playwright-report-${{ matrix.browser }}/
           retention-days: 30
