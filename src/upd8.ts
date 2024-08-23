@@ -22,7 +22,7 @@ export type Upd8<State, Event> = {
 };
 
 export type Upd8ViewConstructor<State, Event> = (new (
-  state: State,
+  getState: () => State,
   viewUpdated: (view: Upd8View<State, Event>, state: State) => void
 ) => Upd8View<State, Event>) & { get id(): string };
 
@@ -37,15 +37,20 @@ export const cre8 = <State, Event>(
     _config.didUpdate = (_state) => {};
   }
   const config = _config as Required<Config<State, Event>>;
+  let globalState: State;
   const initUpd8 = (state: State, eventHandler: (evt: Event) => void) => {
     if (initialized) {
       throw new Error("upd8 may only be initialized once.");
     }
+    globalState = state;
     for (const ViewK of allViews) {
-      const view = new ViewK(state, (view, state) => {
-        config.viewUpdated(view);
-        config.didUpdate(state);
-      });
+      const view = new ViewK(
+        () => globalState,
+        (view, state) => {
+          config.viewUpdated(view);
+          config.didUpdate(state);
+        }
+      );
       if (views.has(view.id)) {
         throw new Error(`View ${view.id} already exists.`);
       }
@@ -53,8 +58,8 @@ export const cre8 = <State, Event>(
       view.listen(eventHandler);
     }
     const upd8 = async (state: State) => {
+      globalState = state;
       for (const view of views.values()) {
-        view._upd8_setState(state);
         const visible = view.showing(state);
         if (visible) {
           if (!visibleViews.has(view.id)) {
@@ -110,16 +115,19 @@ export class Upd8View<State, Event> {
   protected get rootElement(): HTMLElement | undefined {
     return document.getElementById(this.id) as HTMLElement | undefined;
   }
-  protected state!: State;
+  private _getState: () => State;
+  protected get state(): State {
+    return this._getState();
+  }
   private _upd8_els: Map<string, HTMLElement> = new Map();
   private _upd8_templates: Map<string, HTMLElement> = new Map();
   private _upd8_eventListeners: Set<(evt: Event) => void> = new Set();
   protected didUpdate(_view: this, _state: State) {}
   constructor(
-    state: State,
+    getState: () => State,
     updated: (view: Upd8View<State, Event>, state: State) => void
   ) {
-    this.state = state;
+    this._getState = getState;
     this.didUpdate = updated;
   }
 
@@ -152,10 +160,6 @@ export class Upd8View<State, Event> {
 
   showing(state: State): boolean {
     return !!this.rootElement;
-  }
-
-  _upd8_setState(state: State) {
-    this.state = state;
   }
 
   update() {
