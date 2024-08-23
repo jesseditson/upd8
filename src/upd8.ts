@@ -54,15 +54,16 @@ export const cre8 = <State, Event>(
     }
     const upd8 = async (state: State) => {
       for (const view of views.values()) {
+        view._upd8_setState(state);
         const visible = view.showing(state);
         if (visible) {
           if (!visibleViews.has(view.id)) {
             view.show();
             visibleViews.add(view.id);
-            view.update(state);
+            view.update();
             view.becameVisible();
           } else {
-            view.update(state);
+            view.update();
           }
         } else {
           view.hide();
@@ -153,9 +154,12 @@ export class Upd8View<State, Event> {
     return !!this.rootElement;
   }
 
-  update(state: State) {
-    this._upd8_lazyInit();
+  _upd8_setState(state: State) {
     this.state = state;
+  }
+
+  update() {
+    this._upd8_lazyInit();
     this.updated();
   }
   internalUpdate() {
