@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Tests
 on:
   push:
     branches: [main]
@@ -10,7 +10,7 @@ concurrency:
 env:
   CI: true
 jobs:
-  test:
+  integration:
     strategy:
       matrix:
         browser: [chromium] # firefox, webkit,
@@ -26,10 +26,22 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
       - name: Run Playwright tests
-        run: npm test -- --project ${{ matrix.browser }}
+        run: npm test:integration -- --project ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
           path: playwright-report-${{ matrix.browser }}/
           retention-days: 30
+  unit:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm test:unit
