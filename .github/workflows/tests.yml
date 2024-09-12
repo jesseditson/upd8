@@ -25,6 +25,8 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+      - name: build lib
+        run: npm run build
       - name: Run Playwright tests
         run: npm test:integration -- --project ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
