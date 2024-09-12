@@ -12,7 +12,9 @@
   ],
   "types": "lib/upd8.d.ts",
   "scripts": {
-    "test": "npx playwright test",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:integration": "npx playwright test",
+    "test:unit": "tsc --noEmit && node --import tsx --test tests/unit/*.spec.ts",
     "build": "rm -rf lib && tsc -p tsconfig.json"
   },
   "repository": {
@@ -35,8 +37,10 @@
     "@playwright/test": "^1.44.1",
     "@types/node": "^20.14.2",
     "http-server": "^14.1.1",
+    "jsdom": "^25.0.0",
     "todomvc-app-css": "^2.4.3",
     "todomvc-common": "^1.0.5",
+    "tsx": "^4.19.1",
     "typescript": "^5.4.5"
   }
 }

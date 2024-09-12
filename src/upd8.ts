@@ -6,14 +6,16 @@ export type Config<State, Event> = {
   setHidden?: (el: HTMLElement, hidden: boolean) => void;
   viewUpdated?: (view: Upd8View<State, Event>) => void;
   didUpdate?: (state: State) => void;
+  document?: Document;
 };
 
 export type ImperativeUpd8Fn<State, Event> = <
-  ViewType extends Upd8View<State, Event> = Upd8View<State, Event>
+  ViewType extends Upd8View<State, Event> = Upd8View<State, Event>,
+  R = any
 >(
   id: string,
-  upd8: (view: ViewType) => void
-) => void;
+  upd8: (view: ViewType) => R
+) => R | undefined;
 export type Upd8<State, Event> = {
   (state: State, eventHandler: (evt: Event) => void): (
     state: State
@@ -30,11 +32,22 @@ export const cre8 = <State, Event>(
   allViews: Upd8ViewConstructor<State, Event>[],
   _config: Config<State, Event> = {}
 ): Upd8<State, Event> => {
+  views.clear();
+  visibleViews.clear();
   if (!_config.viewUpdated) {
     _config.viewUpdated = (_view) => {};
   }
   if (!_config.didUpdate) {
     _config.didUpdate = (_state) => {};
+  }
+  if (!_config.document) {
+    try {
+      _config.document = document;
+    } catch (e) {
+      throw new Error(
+        `upd8 either requires a global document object, or a config entry containing a document. (${e})`
+      );
+    }
   }
   const config = _config as Required<Config<State, Event>>;
   let globalState: State;
@@ -51,6 +64,7 @@ export const cre8 = <State, Event>(
           config.didUpdate(state);
         }
       );
+      view._upd8_document = config.document;
       if (views.has(view.id)) {
         throw new Error(`View ${view.id} already exists.`);
       }
@@ -81,15 +95,15 @@ export const cre8 = <State, Event>(
     return upd8;
   };
   initUpd8.imperative = <
-    ViewType extends Upd8View<State, Event> = Upd8View<State, Event>
+    ViewType extends Upd8View<State, Event> = Upd8View<State, Event>,
+    R = any
   >(
     id: string,
-    upd8: (view: ViewType) => void
+    upd8: (view: ViewType) => R
   ) => {
     for (const view of views.values()) {
       if (view.id === id) {
-        upd8(view as ViewType);
-        break;
+        return upd8(view as ViewType);
       }
     }
   };
@@ -112,8 +126,63 @@ export class Upd8View<State, Event> {
     throw new Error("Upd8View subclasses must define id");
   }
   private _upd8_initialized = false;
+  _upd8_document!: Document;
+  private _rootElement!: HTMLElement;
   protected get rootElement(): HTMLElement | undefined {
-    return document.getElementById(this.id) as HTMLElement | undefined;
+    if (this._rootElement) {
+      return this._rootElement;
+    }
+    const els = this._upd8_document.querySelectorAll(`#${this.id}`);
+    if (els.length === 0) {
+      return undefined;
+    }
+    let el = els.item(0);
+    if (els.length > 1) {
+      // The document will by default return elements in child order, then
+      // document order. However, we need the outer-most element, which there
+      // is no native API for retrieving. Therefore we have to check the depth
+      // of each match and return the smallest.
+      const pc: Record<number, number> = {};
+      let pcmin = Infinity;
+      for (let i = 0; i < els.length; i++) {
+        let cel = els.item(i);
+        if (!cel.parentElement) {
+          // early break if we're at the root, since we can't do better than
+          // that by traversing.
+          el = cel;
+          break;
+        }
+        // Set a depth
+        pc[i] = 0;
+        while (cel.parentElement) {
+          pc[i]++;
+          if (pc[i] > pcmin) {
+            // No need to check further
+            delete pc[i];
+            break;
+          }
+          cel = cel.parentElement;
+        }
+        if (pc[i] < pcmin) {
+          pcmin = pc[i];
+        }
+      }
+      const ixs: { d: number; i: number }[] = [];
+      for (let i = 0; i < Object.keys(pc).length; i++) {
+        if (pc[i] >= pcmin) {
+          ixs.push({ d: pc[i], i });
+        }
+      }
+      el = els.item(ixs.sort((a, b) => (a.d < b.d ? -1 : 1))[0].i) || undefined;
+      console.warn(
+        `[${this.id}] Found more than one element with ID "${this.id}". Choosing the outer-most element:`,
+        el
+      );
+    }
+    if (el) {
+      this._rootElement = el as HTMLElement;
+    }
+    return el as HTMLElement | undefined;
   }
   private _getState: () => State;
   protected get state(): State {
@@ -152,8 +221,12 @@ export class Upd8View<State, Event> {
   }
 
   internalError(message: string) {
-    this._upd8_lazyInit();
-    this.errored(message);
+    try {
+      this._upd8_lazyInit();
+      this.errored(message);
+    } catch (e) {
+      console.error(`[${this.id}] errored while handling internalError:`, e);
+    }
   }
 
   errored(message: string) {}
@@ -283,7 +356,7 @@ export class Upd8View<State, Event> {
       throw new Error(`Couldn't find element ${el}`);
     }
     const raw = rootEl.innerHTML;
-    const els = rootEl.querySelectorAll(selector);
+    const els = rootEl.querySelectorAll(`:scope ${selector}`);
     if (!els.length) {
       throw new Error(`Couldn't find element ${el} ${selector} in ${raw}`);
     }
@@ -341,14 +414,16 @@ export class Upd8View<State, Event> {
   }
 
   private _upd8_initElements() {
-    this.rootElement?.querySelectorAll("[id]").forEach((el) => {
+    this.rootElement?.querySelectorAll(":scope [id]").forEach((el) => {
       this._upd8_els.set(el.id, el as HTMLElement);
     });
-    this.rootElement?.querySelectorAll("[data-template]").forEach((el) => {
-      const e = el as HTMLElement;
-      this._upd8_templates.set(e.dataset["template"]!, e);
-      delete e.dataset["template"];
-      e.parentNode?.removeChild(e);
-    });
+    this.rootElement
+      ?.querySelectorAll(":scope [data-template]")
+      .forEach((el) => {
+        const e = el as HTMLElement;
+        this._upd8_templates.set(e.dataset["template"]!, e);
+        delete e.dataset["template"];
+        e.parentNode?.removeChild(e);
+      });
   }
 }
