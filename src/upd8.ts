@@ -21,6 +21,7 @@ export type Upd8<State, Event> = {
     state: State
   ) => Promise<void>;
   imperative: ImperativeUpd8Fn<State, Event>;
+  teardown: () => void;
 };
 
 export type Upd8ViewConstructor<State, Event> = (new (
@@ -32,6 +33,7 @@ export const cre8 = <State, Event>(
   allViews: Upd8ViewConstructor<State, Event>[],
   _config: Config<State, Event> = {}
 ): Upd8<State, Event> => {
+  initialized = false;
   views.clear();
   visibleViews.clear();
   if (!_config.viewUpdated) {
@@ -106,6 +108,12 @@ export const cre8 = <State, Event>(
         return upd8(view as ViewType);
       }
     }
+  };
+  initUpd8.teardown = () => {
+    for (const view of views.values()) {
+      view.teardown();
+    }
+    initialized = false;
   };
   return initUpd8;
 };
@@ -191,6 +199,7 @@ export class Upd8View<State, Event> {
   private _upd8_els: Map<string, HTMLElement> = new Map();
   private _upd8_templates: Map<string, HTMLElement> = new Map();
   private _upd8_eventListeners: Set<(evt: Event) => void> = new Set();
+  private _upd8_teardownFns: Function[] = [];
   protected didUpdate(_view: this, _state: State) {}
   constructor(
     getState: () => State,
@@ -199,6 +208,17 @@ export class Upd8View<State, Event> {
     this._getState = getState;
     this.didUpdate = updated;
   }
+  teardown() {
+    this._upd8_templates.forEach((el) => {
+      this._rootElement.appendChild(el);
+    });
+    this._upd8_templates = new Map();
+    this._upd8_teardownFns.forEach((teardown) => {
+      teardown();
+    });
+    this._upd8_teardownFns = [];
+    this._upd8_initialized = false;
+  }
 
   private _upd8_lazyInit() {
     if (!this._upd8_initialized) {
@@ -206,7 +226,7 @@ export class Upd8View<State, Event> {
         throw new Error(`Upd8View element not found: ${this.id}`);
       }
       this._upd8_initElements();
-      this.mount();
+      this._upd8_teardownFns = this._upd8_teardownFns.concat(this.mount());
       this._upd8_initialized = true;
     }
   }
