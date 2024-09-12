@@ -1,4 +1,4 @@
-import test from "node:test";
+import test, { before, describe } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { cre8, Upd8View } from "../../src/upd8";
@@ -11,12 +11,6 @@ class TestMultiIDView extends Upd8View<{}, {}> {
   get id() {
     return TestMultiIDView.id;
   }
-
-  // mount(): Function[] {
-  //     return [
-  //         this.eventListener("")
-  //     ]
-  // }
   checkView(): string | undefined {
     const ds = this.rootElement?.dataset;
     if (ds) {
@@ -52,4 +46,63 @@ test("it chooses the outer-most of duplicate IDs when showing views", () => {
     (v) => v.checkView()
   );
   assert.equal(correct, "yes");
+});
+
+describe("setContent", () => {
+  class SetContentTest extends Upd8View<{}, {}> {
+    static get id() {
+      return "sct";
+    }
+
+    get id() {
+      return SetContentTest.id;
+    }
+
+    checkSingle(): HTMLElement {
+      return this.setContent("c-el", "hi!");
+    }
+    checkMulti(): HTMLElement[] {
+      return this.setContent("m-el", "hi!", ".child");
+    }
+  }
+  type RTC = ReturnType<typeof cre8<{}, {}>>;
+  let dom: JSDOM, initUI: RTC, upd8: ReturnType<RTC>;
+  before(() => {
+    dom = new JSDOM(
+      `<!DOCTYPE html><body>
+        <div id="sct">
+            <div id="c-el"></div>
+            <div id="m-el">
+                <div class="child"></div>
+                <div class="child"></div>
+                <div class="child"></div>
+            </div>
+        </div>
+        </body>`
+    );
+    initUI = cre8([SetContentTest], {
+      document: dom.window.document,
+    });
+    upd8 = initUI({}, (event) => {});
+  });
+  test("setContent without a selector returns one element", () => {
+    const val = initUI.imperative<SetContentTest, HTMLElement>(
+      SetContentTest.id,
+      (v) => v.checkSingle()
+    );
+    assert(val);
+    assert(val instanceof dom.window.HTMLElement);
+    assert.equal(val.innerHTML, "hi!");
+  });
+  test("setContent with a selector returns multiple elements", () => {
+    const val = initUI.imperative<SetContentTest, HTMLElement[]>(
+      SetContentTest.id,
+      (v) => v.checkMulti()
+    );
+    assert(val);
+    val.forEach((el) => {
+      assert(el instanceof dom.window.HTMLElement);
+      assert.equal(el.innerHTML, "hi!");
+    });
+  });
 });

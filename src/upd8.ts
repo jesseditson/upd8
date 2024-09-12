@@ -79,10 +79,10 @@ export const cre8 = <State, Event>(
           if (!visibleViews.has(view.id)) {
             view.show();
             visibleViews.add(view.id);
-            view.update();
+            view._upd8_update();
             view.becameVisible();
           } else {
-            view.update();
+            view._upd8_update();
           }
         } else {
           view.hide();
@@ -235,7 +235,7 @@ export class Upd8View<State, Event> {
     return !!this.rootElement;
   }
 
-  update() {
+  _upd8_update() {
     this._upd8_lazyInit();
     this.updated();
   }
@@ -322,6 +322,7 @@ export class Upd8View<State, Event> {
   }
 
   public findElement(el: string | HTMLElement, selector?: string): HTMLElement {
+    this._upd8_lazyInit();
     let htmlEl;
     const isSel = typeof el === "string";
     if (isSel) {
@@ -365,14 +366,25 @@ export class Upd8View<State, Event> {
 
   setContent(
     el: string | HTMLElement,
+    value: (string | Node)[] | (string | Node)
+  ): HTMLElement;
+  setContent(
+    el: string | HTMLElement,
     value: (string | Node)[] | (string | Node),
     selector?: string
-  ) {
+  ): HTMLElement[];
+  setContent(
+    el: string | HTMLElement,
+    value: (string | Node)[] | (string | Node),
+    selector?: string
+  ): HTMLElement | HTMLElement[] {
     if (selector) {
       const els = this._upd8_findElements(el, selector);
+      const modified = [];
       for (const el of els) {
-        this.setContent(el, value);
+        modified.push(this.setContent(el, value));
       }
+      return modified;
     } else {
       const htmlEl = this.findElement(el);
       if (Array.isArray(value)) {
@@ -380,8 +392,10 @@ export class Upd8View<State, Event> {
       } else {
         htmlEl?.replaceChildren(value);
       }
+      return htmlEl;
     }
   }
+
   setData(
     el: string | HTMLElement,
     data: Record<string, string>,
