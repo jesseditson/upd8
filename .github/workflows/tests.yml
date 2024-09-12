@@ -28,7 +28,7 @@ jobs:
       - name: build lib
         run: npm run build
       - name: Run Playwright tests
-        run: npm test:integration -- --project ${{ matrix.browser }}
+        run: npm run test:integration -- --project ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -46,4 +46,4 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Run unit tests
-        run: npm test:unit
+        run: npm run test:unit
