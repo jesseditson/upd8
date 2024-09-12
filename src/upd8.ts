@@ -306,7 +306,17 @@ export class Upd8View<State, Event> {
     let htmlEl: T;
     if (typeof el === "string") {
       htmlEl = this._upd8_els.get(el) as T;
+      if (!htmlEl) {
+        throw new Error(
+          `[${this.id}] eventListener failed: couldn't find element with id "${el}" for ${event} in ${this.rootElement?.outerHTML}`
+        );
+      }
     } else {
+      if (!el) {
+        throw new Error(
+          `[${this.id}] eventListener failed: element was undefined for ${event}`
+        );
+      }
       htmlEl = el as T;
     }
     let targetSelector = null;
