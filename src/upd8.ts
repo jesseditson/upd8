@@ -17,9 +17,11 @@ export type ImperativeUpd8Fn<State, Event> = <
   upd8: (view: ViewType) => R
 ) => R | undefined;
 export type Upd8<State, Event> = {
-  (state: State, eventHandler: (evt: Event) => void): (
-    state: State
-  ) => Promise<void>;
+  (
+    state: State,
+    eventHandler: (evt: Event) => void,
+    skipAutoUpdate?: boolean
+  ): (state: State) => Promise<void>;
   imperative: ImperativeUpd8Fn<State, Event>;
   teardown: () => void;
 };
@@ -73,7 +75,11 @@ export const cre8 = <State, Event>(
     }
     config.didUpdate(state);
   };
-  const initUpd8 = (state: State, eventHandler: (evt: Event) => void) => {
+  const initUpd8 = (
+    state: State,
+    eventHandler: (evt: Event) => void,
+    skipAutoUpdate = false
+  ) => {
     if (initialized) {
       throw new Error("upd8 may only be initialized once.");
     }
@@ -92,7 +98,9 @@ export const cre8 = <State, Event>(
       }
       views.set(view.id, view);
       view.listen(eventHandler);
-      upd8(state);
+      if (!skipAutoUpdate) {
+        upd8(state);
+      }
     }
     return upd8;
   };

@@ -149,10 +149,10 @@ describe("mount", () => {
     initUI.teardown();
     dom.window.close();
   });
-  test("it emits a helpful error message when a listener fails to mount", async () => {
+  test("it emits a helpful error message when a listener fails to mount", () => {
     rejects(
       async () => {
-        upd8 = initUI({}, (event) => {});
+        const upd8 = initUI({}, (event) => {}, true);
         await upd8({});
       },
       {
