@@ -32,8 +32,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report
-          path: playwright-report-${{ matrix.browser }}/
+          name: playwright-report-${{ matrix.browser }}
+          path: playwright-report/
           retention-days: 30
   unit:
     timeout-minutes: 60
