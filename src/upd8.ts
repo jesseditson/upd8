@@ -53,6 +53,26 @@ export const cre8 = <State, Event>(
   }
   const config = _config as Required<Config<State, Event>>;
   let globalState: State;
+  const upd8 = async (state: State) => {
+    globalState = state;
+    for (const view of views.values()) {
+      const visible = view.showing(state);
+      if (visible) {
+        if (!visibleViews.has(view.id)) {
+          view.show();
+          visibleViews.add(view.id);
+          view._upd8_update();
+          view.becameVisible();
+        } else {
+          view._upd8_update();
+        }
+      } else {
+        view.hide();
+        visibleViews.delete(view.id);
+      }
+    }
+    config.didUpdate(state);
+  };
   const initUpd8 = (state: State, eventHandler: (evt: Event) => void) => {
     if (initialized) {
       throw new Error("upd8 may only be initialized once.");
@@ -72,28 +92,8 @@ export const cre8 = <State, Event>(
       }
       views.set(view.id, view);
       view.listen(eventHandler);
+      upd8(state);
     }
-    const upd8 = async (state: State) => {
-      globalState = state;
-      for (const view of views.values()) {
-        const visible = view.showing(state);
-        if (visible) {
-          if (!visibleViews.has(view.id)) {
-            view.show();
-            visibleViews.add(view.id);
-            view._upd8_update();
-            view.becameVisible();
-          } else {
-            view._upd8_update();
-          }
-        } else {
-          view.hide();
-          visibleViews.delete(view.id);
-        }
-      }
-      config.didUpdate(state);
-    };
-    setTimeout(() => upd8(state), 0);
     return upd8;
   };
   initUpd8.imperative = <

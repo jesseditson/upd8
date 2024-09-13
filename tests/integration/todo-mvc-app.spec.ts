@@ -445,13 +445,15 @@ async function checkNumberOfTodosInLocalStorage(page: Page, expected: number) {
   return await page.waitForFunction(async (e) => {
     const getTODOsFromLocalStorage = () => {
       try {
-        return JSON.parse(localStorage.getItem("todos-upd8")!);
+        return JSON.parse(
+          localStorage.getItem("todos-upd8") || '{"todos": []}'
+        );
       } catch (e) {
         console.error(`FAILED QUERYING LOCALSTORAGE: ${e}`);
         return { todos: [] };
       }
     };
-    return getTODOsFromLocalStorage().length === e;
+    return getTODOsFromLocalStorage().todos.length === e;
   }, expected);
 }
 
@@ -462,7 +464,9 @@ async function checkNumberOfCompletedTodosInLocalStorage(
   return await page.waitForFunction(async (e) => {
     const getTODOsFromLocalStorage = () => {
       try {
-        return JSON.parse(localStorage.getItem("todos-upd8")!);
+        return JSON.parse(
+          localStorage.getItem("todos-upd8") || '{"todos": []}'
+        );
       } catch (e) {
         console.error(`FAILED QUERYING LOCALSTORAGE: ${e}`);
         return { todos: [] };
@@ -479,7 +483,9 @@ async function checkTodosInLocalStorage(page: Page, title: string) {
   return await page.waitForFunction(async (t) => {
     const getTODOsFromLocalStorage = () => {
       try {
-        return JSON.parse(localStorage.getItem("todos-upd8")!);
+        return JSON.parse(
+          localStorage.getItem("todos-upd8") || '{"todos": []}'
+        );
       } catch (e) {
         console.error(`FAILED QUERYING LOCALSTORAGE: ${e}`);
         return { todos: [] };
