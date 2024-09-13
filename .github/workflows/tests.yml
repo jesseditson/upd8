@@ -13,7 +13,7 @@ jobs:
   integration:
     strategy:
       matrix:
-        browser: [chromium] # firefox, webkit,
+        browser: [chromium, firefox, webkit]
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
