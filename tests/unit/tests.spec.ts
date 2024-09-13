@@ -144,7 +144,6 @@ describe("mount", () => {
     initUI = cre8([InitError], {
       document: dom.window.document,
     });
-    upd8 = initUI({}, (event) => {});
   });
   after(() => {
     initUI.teardown();
@@ -153,6 +152,7 @@ describe("mount", () => {
   test("it emits a helpful error message when a listener fails to mount", async () => {
     rejects(
       async () => {
+        upd8 = initUI({}, (event) => {});
         await upd8({});
       },
       {
