@@ -469,13 +469,31 @@ export class Upd8View<State, Event> {
     this.rootElement?.querySelectorAll(":scope [id]").forEach((el) => {
       this._upd8_els.set(el.id, el as HTMLElement);
     });
-    this.rootElement
-      ?.querySelectorAll(":scope [data-template]")
-      .forEach((el) => {
-        const e = el as HTMLElement;
-        this._upd8_templates.set(e.dataset["template"]!, e);
-        delete e.dataset["template"];
-        e.parentNode?.removeChild(e);
-      });
+    this._upd8_initTemplates();
   }
+
+  private _upd8_initTemplates() {
+    if (this.rootElement) {
+      const templates = traverse(this.rootElement, el => !!(el instanceof HTMLElement && el.dataset["template"]), el => views.has(el.id));
+      templates.forEach(el => {
+        const templateName = (el as HTMLElement).dataset["template"]!;
+        this._upd8_templates.set(templateName, el as HTMLElement);
+        el.parentNode?.removeChild(el);
+      })
+    }
+  }
+}
+
+const traverse = (el: Element, select: (el: Element) => boolean, stop: (el: Element) => boolean, _acc: Element[] = []): Element[] => {
+  for (let i = 0; i < el.children.length; i++) {
+    const cel = el.children.item(i) as Element
+    if (select(cel)) {
+      _acc.push(cel)
+    }
+    if (stop(cel)) {
+      continue;
+    }
+    traverse(cel, select, stop, _acc);
+  }
+  return _acc;
 }
