@@ -466,9 +466,12 @@ export class Upd8View<State, Event> {
   }
 
   private _upd8_initElements() {
-    this.rootElement?.querySelectorAll(":scope [id]").forEach((el) => {
-      this._upd8_els.set(el.id, el as HTMLElement);
-    });
+    if (this.rootElement) {
+      const elementsWithIds = traverse(this.rootElement, el => !!(el instanceof HTMLElement && el.id), el => views.has(el.id));
+      elementsWithIds.forEach(el => {
+        this._upd8_els.set(el.id, el as HTMLElement);
+      })
+    }
     this._upd8_initTemplates();
   }
 
