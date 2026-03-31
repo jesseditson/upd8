@@ -98,9 +98,9 @@ export const cre8 = <State, Event>(
       }
       views.set(view.id, view);
       view.listen(eventHandler);
-      if (!skipAutoUpdate) {
-        upd8(state);
-      }
+    }
+    if (!skipAutoUpdate) {
+      upd8(state);
     }
     return upd8;
   };

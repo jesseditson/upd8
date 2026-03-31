@@ -2,7 +2,7 @@ import test, { after, afterEach, before, describe } from "node:test";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { cre8, Upd8View } from "../../src/upd8";
-import { rejects, throws } from "node:assert";
+import { rejects } from "node:assert";
 
 class TestMultiIDView extends Upd8View<{}, {}> {
   static get id() {
@@ -54,6 +54,81 @@ test("it chooses the outer-most of duplicate IDs when showing views", async () =
   assert.equal(correct, "yes");
   initUI.teardown();
   dom.window.close();
+});
+
+test("it scopes nested templates to their owning view when parent initializes first", () => {
+  class ParentTemplateView extends Upd8View<{}, {}> {
+    static get id() {
+      return "parent-template-view";
+    }
+
+    get id() {
+      return ParentTemplateView.id;
+    }
+
+    parentTemplate(): HTMLElement {
+      return this.template("parent");
+    }
+
+    childTemplate(): HTMLElement {
+      return this.template("child");
+    }
+  }
+
+  class ChildTemplateView extends Upd8View<{}, {}> {
+    static get id() {
+      return "child-template-view";
+    }
+
+    get id() {
+      return ChildTemplateView.id;
+    }
+
+    childTemplate(): HTMLElement {
+      return this.template("child");
+    }
+  }
+
+  const dom = new JSDOM(
+    `<!DOCTYPE html><body>
+      <div id="parent-template-view">
+        <div data-template="parent"><span>parent</span></div>
+        <div id="child-template-view">
+          <div data-template="child"><span>child</span></div>
+        </div>
+      </div>
+    </body>`
+  );
+  const initUI = cre8([ParentTemplateView, ChildTemplateView], {
+    document: dom.window.document,
+  });
+  const previousHTMLElement = (globalThis as any).HTMLElement;
+  (globalThis as any).HTMLElement = dom.window.HTMLElement;
+  try {
+    initUI({}, () => {});
+
+    assert.doesNotThrow(() =>
+      initUI.imperative(ChildTemplateView.id, (v) => v.childTemplate())
+    );
+    assert.throws(
+      () => initUI.imperative(ParentTemplateView.id, (v) => v.childTemplate()),
+      /does not exist/
+    );
+
+    const parentTemplate = initUI.imperative<ParentTemplateView, HTMLElement>(
+      ParentTemplateView.id,
+      (v) => v.parentTemplate()
+    );
+    assert.match(parentTemplate.textContent || "", /parent/);
+  } finally {
+    initUI.teardown();
+    dom.window.close();
+    if (previousHTMLElement) {
+      (globalThis as any).HTMLElement = previousHTMLElement;
+    } else {
+      delete (globalThis as any).HTMLElement;
+    }
+  }
 });
 
 describe("setContent", () => {
