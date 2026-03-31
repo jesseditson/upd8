@@ -305,6 +305,16 @@ export class Upd8View<State, Event> {
     return el as T;
   }
 
+  removeElement(el: HTMLElement | string, selector?: string) {
+    if (typeof el === "string" || selector) {
+      this.removeElement(
+        typeof el === "string" ? this.el(el) : this.findElement(el, selector)
+      );
+    } else {
+      el.parentElement?.removeChild(el);
+    }
+  }
+
   eventListener<T extends HTMLElement, K extends keyof HTMLElementEventMap>(
     el: string | T,
     event: K | K[],
